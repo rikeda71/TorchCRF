@@ -1,6 +1,6 @@
 # Torch CRF
 
-Implementation of CRF (Conditional Random Fields) in PyTorch 0.4
+PyTorch 0.4 による条件付き確率場 (CRF) の実装
 
 ## Requirements
 
@@ -25,14 +25,14 @@ Implementation of CRF (Conditional Random Fields) in PyTorch 0.4
 >>> crf = CRF(num_labels)
 ```
 
-### Computing log-likelihood (used where forward)
+### Computing log-likelihood (順伝搬で使う)
 
 ```python
 >>> crf.forward(hidden, labels, mask)
 tensor([-7.6204, -3.6124], grad_fn=<ThSubBackward>)
 ```
 
-### Decoding (predict labels of sequences)
+### Decoding (系列のラベルの予測)
 
 ```python
 >>> crf.viterbi_decode(hidden, mask)
