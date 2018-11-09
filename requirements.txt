@@ -1,2 +1,2 @@
-nose
-sphinx
+numpy==1.15.4
+torch==0.4.1

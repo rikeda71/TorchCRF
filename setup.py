@@ -5,7 +5,10 @@
 from setuptools import setup, find_packages
 
 
-with open('README.rst') as f:
+def _requires_from_file(filename):
+    return open(filename).read().splitlines()
+
+with open('README.md') as f:
     readme = f.read()
 
 with open('LICENSE') as f:
@@ -18,8 +21,10 @@ setup(
     long_description=readme,
     author='Ryuya Ikeda',
     author_email='rikeda71@gmail.com',
-    install_requires=['numpy', 'torch']
+    install_requires=_requires_from_file('requirements.txt'),
     url='https://github.com/s14t284/TorchCRF',
     license=license,
-    packages=find_packages(exclude=('tests', 'docs'))
+    packages=find_packages(exclude=('tests', )),
+    python_requires='>=3.5',
+    test_suite='tests',
 )
