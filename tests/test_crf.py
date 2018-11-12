@@ -1,8 +1,8 @@
 import unittest
-import src
+import TorchCRF
 import torch
 import torch.nn as nn
-from src.crf import CRF
+from TorchCRF.crf import CRF
 
 
 class TestCRF(unittest.TestCase):

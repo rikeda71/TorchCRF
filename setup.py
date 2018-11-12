@@ -8,6 +8,7 @@ from setuptools import setup, find_packages
 def _requires_from_file(filename):
     return open(filename).read().splitlines()
 
+
 with open('README.md') as f:
     readme = f.read()
 
@@ -24,7 +25,7 @@ setup(
     install_requires=_requires_from_file('requirements.txt'),
     url='https://github.com/s14t284/TorchCRF',
     license=license,
-    packages=find_packages(exclude=('tests', )),
+    packages=['TorchCRF'],
     python_requires='>=3.5',
     test_suite='tests',
 )
