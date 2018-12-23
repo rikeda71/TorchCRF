@@ -1,11 +1,11 @@
 # Torch CRF
 
-Implementation of CRF (Conditional Random Fields) in PyTorch 0.4
+Implementation of CRF (Conditional Random Fields) in PyTorch 1.0
 
 ## Requirements
 
-- python 3.6 (python 3.5)
-- PyTorch 0.4
+- python3 (>=3.5)
+- PyTorch 1.0
 
 ## Installation
 

@@ -17,7 +17,7 @@ with open('LICENSE') as f:
 
 setup(
     name='TorchCRF',
-    version='0.0.1',
+    version='1.0.0',
     description='Implementation of Conditional Random Fields in pytorch',
     long_description=readme,
     author='Ryuya Ikeda',
