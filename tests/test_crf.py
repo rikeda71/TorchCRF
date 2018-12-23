@@ -2,7 +2,7 @@ import unittest
 import TorchCRF
 import torch
 import torch.nn as nn
-from TorchCRF.crf import CRF
+from TorchCRF import CRF
 
 
 class TestCRF(unittest.TestCase):
@@ -71,5 +71,5 @@ class TestCRF(unittest.TestCase):
         self.assertTrue([label in label_types for seq in labels for label in seq])
 
     def test_logsumexp(self):
-        lse = self.crf.logsumexp(self.hidden)
+        lse = self.crf.logsumexp(self.hidden, -1)
         self.assertEqual(lse.size(), (self.batch_size, self.sequence_size))

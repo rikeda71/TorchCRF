@@ -15,7 +15,7 @@ PyTorch 0.4 による条件付き確率場 (CRF) の実装
 
 ```python
 >>> import torch
->>> from TorchCRF.crf import CRF
+>>> from TorchCRF import CRF
 >>> batch_size = 2
 >>> sequence_size = 3
 >>> num_labels = 5

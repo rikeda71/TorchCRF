@@ -15,7 +15,7 @@ Implementation of CRF (Conditional Random Fields) in PyTorch 0.4
 
 ```python
 >>> import torch
->>> from TorchCRF.crf import CRF
+>>> from TorchCRF import CRF
 >>> batch_size = 2
 >>> sequence_size = 3
 >>> num_labels = 5
