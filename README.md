@@ -1,4 +1,5 @@
 # Torch CRF
+[![CircleCI](https://circleci.com/gh/s14t284/TorchCRF.svg?style=svg)](https://circleci.com/gh/s14t284/TorchCRF) [![Coverage Status](https://coveralls.io/repos/github/s14t284/TorchCRF/badge.svg)](https://coveralls.io/github/s14t284/TorchCRF)
 
 Implementation of CRF (Conditional Random Fields) in PyTorch 1.0
 
