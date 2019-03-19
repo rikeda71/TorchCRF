@@ -4,12 +4,12 @@ PyTorch 1.0 による条件付き確率場 (CRF) の実装
 
 ## Requirements
 
-- python3 (>=3.5)
+- python3 (>=3.6)
 - PyTorch 1.0
 
 ## Installation
 
-    pip install git+https://github.com/s14t284/TorchCRF#egg=TorchCRF
+    $ pip install TorchCRF
 
 ## Usage
 

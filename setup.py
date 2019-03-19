@@ -1,31 +1,32 @@
-# -*- coding: utf-8 -*-
-
-# Learn more: https://github.com/kennethreitz/setup.py
-
-from setuptools import setup, find_packages
+from setuptools import setup
 
 
 def _requires_from_file(filename):
     return open(filename).read().splitlines()
 
 
-with open('README.md') as f:
+with open('README.md', 'r', encoding='utf-8') as f:
     readme = f.read()
-
-with open('LICENSE') as f:
-    license = f.read()
 
 setup(
     name='TorchCRF',
-    version='1.0.0',
-    description='Implementation of Conditional Random Fields in pytorch',
+    version='1.0.1',
+    description='An Implementation of Conditional Random Fields in pytorch',
     long_description=readme,
+    long_description_content_type='text/markdown',
     author='Ryuya Ikeda',
     author_email='rikeda71@gmail.com',
     install_requires=_requires_from_file('requirements.txt'),
     url='https://github.com/s14t284/TorchCRF',
-    license=license,
+    license='MIT',
+    keywords=['crf', 'conditional random fields',
+              'nlp', 'natural language processing'],
+    classifiers=[
+        'License :: OSI Approved :: MIT License',
+        'Programming Language :: Python :: 3.6',
+        'Programming Language :: Python :: 3.7',
+        'Topic :: Text Processing',
+    ],
     packages=['TorchCRF'],
-    python_requires='>=3.5',
     test_suite='tests',
 )
