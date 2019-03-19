@@ -9,7 +9,7 @@ Implementation of CRF (Conditional Random Fields) in PyTorch 1.0
 
 ## Installation
 
-    pip install git+https://github.com/s14t284/TorchCRF#egg=TorchCRF
+    $ pip install TorchCRF
 
 ## Usage
 

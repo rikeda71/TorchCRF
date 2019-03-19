@@ -16,6 +16,7 @@ setup(
     version='1.0.0',
     description='Implementation of Conditional Random Fields in pytorch',
     long_description=readme,
+    long_description_content_type='text/markdown',
     author='Ryuya Ikeda',
     author_email='rikeda71@gmail.com',
     install_requires=_requires_from_file('requirements.txt'),
