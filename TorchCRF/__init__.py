@@ -14,7 +14,8 @@ class CRF(nn.Module):
         """
 
         if num_labels < 1:
-            raise ValueError('invalid number of labels: {0}'.format(num_labels))
+            raise ValueError(
+                'invalid number of labels: {0}'.format(num_labels))
 
         super().__init__()
         self.num_labels = num_labels
@@ -29,17 +30,7 @@ class CRF(nn.Module):
         self.start_trans = nn.Parameter(self.myTensor(num_labels))
         self.end_trans = nn.Parameter(self.myTensor(num_labels))
 
-        self.initialize_parameters()
-
-    def initialize_parameters(self) -> None:
-        """
-        initialize transition parameters
-        :return: None
-        """
-
-        nn.init.uniform_(self.trans_matrix, -0.1, 0.1)
-        nn.init.uniform_(self.start_trans, -0.1, 0.1)
-        nn.init.uniform_(self.end_trans, -0.1, 0.1)
+        self._initialize_parameters()
 
     def forward(self, h: torch.FloatTensor,
                 labels: torch.LongTensor,
@@ -47,8 +38,10 @@ class CRF(nn.Module):
         """
 
         :param h: hidden matrix (seq_len, batch_size, num_labels)
-        :param labels: answer labels of each sequence in mini batch (seq_len, batch_size)
-        :param mask: mask tensor of each sequence in mini batch (seq_len, batch_size)
+        :param labels: answer labels of each sequence
+                       in mini batch (seq_len, batch_size)
+        :param mask: mask tensor of each sequence
+                     in mini batch (seq_len, batch_size)
         :return: The log-likelihood (batch_size)
         """
 
@@ -57,13 +50,99 @@ class CRF(nn.Module):
 
         return log_numerator - log_denominator
 
+    def viterbi_decode(self, h: torch.FloatTensor,
+                       mask: torch.FloatTensor) -> List[int]:
+        """
+        decode labels using viterbi algorithm
+        :param h: hidden matrix (batch_size, seq_len, num_labels)
+        :param mask: mask tensor of each sequence
+                     in mini batch (seq_len, batch_size)
+        :return: labels of each sequence in mini batch
+        """
+
+        batch_size, seq_len, _ = h.size()
+        # 各系列の系列長を用意
+        # prepare the sequence lengths in each sequence
+        seq_lens = mask.long().sum(dim=1)
+        # バッチ内において，スタート地点から先頭のラベルに対してのスコアを用意
+        # In mini batch, prepare the score
+        # from the start sequence to the first label
+        score = [self.start_trans.data + h[:, 0]]
+        path = []
+
+        for t in range(1, seq_len):
+            # 1つ前の系列のスコアを抽出
+            # extract the score of previous sequence
+            # (batch_size, num_labels, 1)
+            previous_score = score[t - 1].view(batch_size, -1, 1)
+
+            # 系列の隠れ層のスコアを抽出
+            # extract the score of hidden matrix of sequence
+            # (batch_size, 1, num_labels)
+            h_t = h[:, t].view(batch_size, 1, -1)
+
+            # t-1の系列のラベルからtの系列のラベルまでの遷移におけるスコアを抽出
+            # self.trans_matrixは系列Aから系列Bまでの遷移のスコアを持っている
+            # extract the score in transition
+            # from label of t-1 sequence to label of sequence of t
+            # self.trans_matrix has the score of the transition
+            # from sequence A to sequence B
+            # (batch_size, num_labels, num_labels)
+            score_t = previous_score + self.trans_matrix + h_t
+
+            # 導出したスコアのうち，各系列の最大値と最大値をとり得る位置を保持
+            # keep the maximum value
+            # and point where maximum value of each sequence
+            # (batch_size, num_labels)
+            best_score, best_path = score_t.max(1)
+            score.append(best_score)
+            path.append(best_path)
+
+        # バッチ内のラベルを推定
+        # predict labels of mini batch
+        best_paths = [self._viterbi_compute_best_path(i, seq_lens, score, path)
+                      for i in range(batch_size)]
+
+        return best_paths
+
+    def _viterbi_compute_best_path(self, batch_idx: int,
+                                   seq_lens: torch.LongTensor,
+                                   score: List[torch.FloatTensor],
+                                   path: List[torch.LongTensor]) -> List[int]:
+        """
+        return labels using viterbi algorithm
+        :param batch_idx: index of batch
+        :param seq_lens: sequence lengths in mini batch (batch_size)
+        :param score: transition scores of length max sequence size
+                      in mini batch [(batch_size, num_labels)]
+        :param path: transition paths of length max sequence size
+                     in mini batch [(batch_size, num_labels)]
+        :return: labels of batch_idx-th sequence
+        """
+
+        seq_end_idx = seq_lens[batch_idx] - 1
+        # 系列の一番後ろのラベルを抽出
+        # extract label of end sequence
+        _, best_last_label = \
+            (score[seq_end_idx][batch_idx] + self.end_trans).max(0)
+        best_labels = [int(best_last_label)]
+
+        # viterbiアルゴリズムにより，ラベルを後ろから推定
+        # predict labels from back using viterbi algorithm
+        for p in reversed(path[: seq_end_idx]):
+            best_last_label = p[batch_idx][best_labels[0]]
+            best_labels.insert(0, int(best_last_label))
+
+        return best_labels
+
     def _compute_denominator_log_likelihood(self, h: torch.FloatTensor,
                                             mask: torch.FloatTensor):
         """
 
         compute the denominator term for the log-likelihood
         :param h: hidden matrix (batch_size, seq_len, num_labels)
-        :param mask: mask tensor of each sequence in mini batch (batch_size, seq_len)
+        :param mask: mask tensor of each sequence
+                     in mini batch (batch_size, seq_len)
         :return: The score of denominator term for the log-likelihood
         """
 
@@ -72,7 +151,8 @@ class CRF(nn.Module):
         # (num_labels, num_labels) -> (1, num_labels, num_labels)
         trans = self.trans_matrix.view(1, self.num_labels, self.num_labels)
         # 先頭から各ラベルへのスコアと各ラベルの1番目のスコアを足し合わせる
-        # add the score from beginning to each label and the first score of each label
+        # add the score from beginning to each label
+        # and the first score of each label
         score = self.start_trans.view(1, -1) + h[:, 0]
         # ミニバッチ中の単語数だけ処理を行う
         # iterate through processing for the number of words in the mini batch
@@ -84,7 +164,8 @@ class CRF(nn.Module):
             # (batch_size, 1)
             mask_t = mask[:, t].view(batch_size, 1)
             # 各系列におけるt番目の系列ラベルの遷移確率
-            # prepare the transition probability of the t-th sequence label in each sequence
+            # prepare the transition probability of the t-th sequence label
+            # in each sequence
             # (batch_size, 1, num_labels)
             h_t = h[:, t].view(batch_size, 1, self.num_labels)
             # 各系列でのt番目のスコアを導出
@@ -103,14 +184,17 @@ class CRF(nn.Module):
         # return the log likely food of all data in mini batch
         return self.logsumexp(score, 1)
 
-    def _compute_numerator_log_likelihood(self, h: torch.FloatTensor,
-                                          y: torch.LongTensor,
-                                          mask: torch.FloatTensor) -> torch.FloatTensor:
+    def _compute_numerator_log_likelihood(
+            self, h: torch.FloatTensor,
+            y: torch.LongTensor,
+            mask: torch.FloatTensor) -> torch.FloatTensor:
         """
         compute the numerator term for the log-likelihood
         :param h: hidden matrix (batch_size, seq_len, num_labels)
-        :param y: answer labels of each sequence in mini batch (batch_size, seq_len)
-        :param mask: mask tensor of each sequence in mini batch (batch_size, seq_len)
+        :param y: answer labels of each sequence
+                  in mini batch (batch_size, seq_len)
+        :param mask: mask tensor of each sequence
+                     in mini batch (batch_size, seq_len)
         :return: The score of numerator term for the log-likelihood
         """
 
@@ -156,94 +240,29 @@ class CRF(nn.Module):
 
         return score
 
-    def viterbi_decode(self, h: torch.FloatTensor,
-                       mask: torch.FloatTensor) -> List[int]:
+    def _initialize_parameters(self) -> None:
         """
-        decode labels using viterbi algorithm
-        :param h: hidden matrix (batch_size, seq_len, num_labels)
-        :param mask: mask tensor of each sequence in mini batch (seq_len, batch_size)
-        :return: labels of each sequence in mini batch
+        initialize transition parameters
+        :return: None
         """
 
-        batch_size, seq_len, _ = h.size()
-        # 各系列の系列長を用意
-        # prepare the sequence lengths in each sequence
-        seq_lens = mask.long().sum(dim=1)
-        # バッチ内において，スタート地点から先頭のラベルに対してのスコアを用意
-        # In mini batch, prepare the score from the start sequence to the first label
-        score = [self.start_trans.data + h[:, 0]]
-        path = []
-
-        for t in range(1, seq_len):
-            # 1つ前の系列のスコアを抽出
-            # extract the score of previous sequence
-            # (batch_size, num_labels, 1)
-            previous_score = score[t - 1].view(batch_size, -1, 1)
-
-            # 系列の隠れ層のスコアを抽出
-            # extract the score of hidden matrix of sequence
-            # (batch_size, 1, num_labels)
-            h_t = h[:, t].view(batch_size, 1, -1)
-
-            # t-1の系列のラベルからtの系列のラベルまでの遷移におけるスコアを抽出
-            # self.trans_matrixは系列Aから系列Bまでの遷移のスコアを持っている
-            # extract the score in transition from label of t-1 sequence to label of sequence of t
-            # self.trans_matrix has the score of the transition from sequence A to sequence B
-            # (batch_size, num_labels, num_labels)
-            score_t = previous_score + self.trans_matrix + h_t
-
-            # 導出したスコアのうち，各系列の最大値と最大値をとり得る位置を保持
-            # keep the maximum value and point where maximum value of each sequence
-            # (batch_size, num_labels)
-            best_score, best_path = score_t.max(1)
-            score.append(best_score)
-            path.append(best_path)
-
-        # バッチ内のラベルを推定
-        # predict labels of mini batch
-        best_paths = [self._viterbi_compute_best_path(i, seq_lens, score, path)
-                      for i in range(batch_size)]
-
-        return best_paths
-
-    def _viterbi_compute_best_path(self, batch_idx: int,
-                                   seq_lens: torch.LongTensor,
-                                   score: List[torch.FloatTensor],
-                                   path: List[torch.LongTensor]) -> List[int]:
-        """
-        return labels using viterbi algorithm
-        :param batch_idx: index of batch
-        :param seq_lens: sequence lengths in mini batch (batch_size)
-        :param score: transition scores of length max sequence size in mini batch [(batch_size, num_labels)]
-        :param path: transition paths of length max sequence size in mini batch [(batch_size, num_labels)]
-        :return: labels of batch_idx-th sequence
-        """
-
-        seq_end_idx = seq_lens[batch_idx] - 1
-        # 系列の一番後ろのラベルを抽出
-        # extract label of end sequence
-        _, best_last_label = (score[seq_end_idx][batch_idx] + self.end_trans).max(0)
-        best_labels = [int(best_last_label)]
-
-        # viterbiアルゴリズムにより，ラベルを後ろから推定
-        # predict labels from back using viterbi algorithm
-        for p in reversed(path[: seq_end_idx]):
-            best_last_label = p[batch_idx][best_labels[0]]
-            best_labels.insert(0, int(best_last_label))
-
-        return best_labels
+        nn.init.uniform_(self.trans_matrix, -0.1, 0.1)
+        nn.init.uniform_(self.start_trans, -0.1, 0.1)
+        nn.init.uniform_(self.end_trans, -0.1, 0.1)
 
     @staticmethod
     def logsumexp(x: torch.FloatTensor, dim: int) -> torch.FloatTensor:
         """
-        return log(sum(exp(x))) while minimizing the possibility of over/underflow.
+        return log(sum(exp(x))) while minimizing
+                                the possibility of overflow/underflow.
         :param x: the matrix format torch.FloatTensor
         :param dim: dimensiton
         :return: log(sum(exp(x)))
         """
 
         vmax, _ = x.max(dim)
-        return vmax + torch.log(torch.sum(torch.exp(x - vmax.unsqueeze(dim)), dim))
+        return vmax + \
+            torch.log(torch.sum(torch.exp(x - vmax.unsqueeze(dim)), dim))
 
     @staticmethod
     def myTensor(*args) -> torch.FloatTensor:

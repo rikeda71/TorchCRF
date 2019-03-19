@@ -1,18 +1,14 @@
-# -*- coding: utf-8 -*-
-
-# Learn more: https://github.com/kennethreitz/setup.py
-
-from setuptools import setup, find_packages
+from setuptools import setup
 
 
 def _requires_from_file(filename):
     return open(filename).read().splitlines()
 
 
-with open('README.md') as f:
+with open('README.md', 'r', encoding='utf-8') as f:
     readme = f.read()
 
-with open('LICENSE') as f:
+with open('LICENSE', 'r', encoding='utf-8') as f:
     license = f.read()
 
 setup(

@@ -1,7 +1,5 @@
 import unittest
-import TorchCRF
 import torch
-import torch.nn as nn
 from TorchCRF import CRF
 
 
@@ -53,10 +51,12 @@ class TestCRF(unittest.TestCase):
 
     def test_compute_log_likelihood(self):
         # log likelihood of denominator term
-        dllh = self.crf._compute_denominator_log_likelihood(self.hidden, self.mask)
+        dllh = self.crf._compute_denominator_log_likelihood(
+            self.hidden, self.mask)
         self.assertEqual(dllh.type(), 'torch.FloatTensor')
         self.assertEqual(dllh.size(), (self.batch_size, ))
-        nllh = self.crf._compute_numerator_log_likelihood(self.hidden, self.labels, self.mask)
+        nllh = self.crf._compute_numerator_log_likelihood(
+            self.hidden, self.labels, self.mask)
         self.assertEqual(nllh.type(), 'torch.FloatTensor')
         self.assertEqual(nllh.size(), (self.batch_size, ))
 
@@ -67,8 +67,13 @@ class TestCRF(unittest.TestCase):
         seq_lens = self.mask.sum(dim=1)
         self.assertEqual(len(labels[0]), seq_lens[0])
         self.assertEqual(len(labels[1]), seq_lens[1])
-        label_types = list(set([int(label) for seq in self.labels for label in seq]))
-        self.assertTrue([label in label_types for seq in labels for label in seq])
+        label_types = list(set([int(label)
+                                for seq in self.labels
+                                for label in seq
+                                ]))
+        self.assertTrue([label in label_types
+                         for seq in labels
+                         for label in seq])
 
     def test_logsumexp(self):
         lse = self.crf.logsumexp(self.hidden, -1)
