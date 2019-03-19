@@ -22,6 +22,6 @@ setup(
     url='https://github.com/s14t284/TorchCRF',
     license=license,
     packages=['TorchCRF'],
-    python_requires='>=3.5',
+    python_requires='>=3.6',
     test_suite='tests',
 )
