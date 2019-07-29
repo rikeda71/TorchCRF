@@ -6,10 +6,11 @@ import torch.nn as nn
 class CRF(nn.Module):
     CUDA = torch.cuda.is_available()
 
-    def __init__(self, num_labels: int) -> None:
+    def __init__(self, num_labels: int, pad_idx: int = None) -> None:
         """
 
         :param num_labels: number of labels
+        :param pad_idxL padding index. default None
         :return None
         """
 
@@ -32,6 +33,12 @@ class CRF(nn.Module):
 
         self._initialize_parameters()
 
+        if pad_idx is not None:
+            self.start_trans[pad_idx] = -10000.
+            self.trans_matrix[pad_idx, :] = -10000.
+            self.trans_matrix[:, pad_idx] = -10000.
+            self.trans_matrix[pad_idx, pad_idx] = 0.
+
     def forward(self, h: torch.FloatTensor,
                 labels: torch.LongTensor,
                 mask: torch.FloatTensor) -> torch.FloatTensor:
@@ -51,7 +58,7 @@ class CRF(nn.Module):
         return log_numerator - log_denominator
 
     def viterbi_decode(self, h: torch.FloatTensor,
-                       mask: torch.FloatTensor) -> List[int]:
+                       mask: torch.FloatTensor) -> List[List[int]]:
         """
         decode labels using viterbi algorithm
         :param h: hidden matrix (batch_size, seq_len, num_labels)
@@ -265,7 +272,7 @@ class CRF(nn.Module):
             torch.log(torch.sum(torch.exp(x - vmax.unsqueeze(dim)), dim))
 
     @staticmethod
-    def myTensor(*args) -> torch.FloatTensor:
+    def myTensor(*args) -> torch.Tensor:
         x = torch.Tensor(*args)
         return x.cuda() if CRF.CUDA else x
 
@@ -275,6 +282,6 @@ class CRF(nn.Module):
         return x.cuda() if CRF.CUDA else x
 
     @staticmethod
-    def myrandn(*args) -> torch.FloatTensor:
+    def myrandn(*args) -> torch.Tensor:
         x = torch.randn(*args)
         return x.cuda() if CRF.CUDA else x
