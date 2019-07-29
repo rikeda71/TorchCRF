@@ -10,7 +10,7 @@ with open('README.md', 'r', encoding='utf-8') as f:
 
 setup(
     name='TorchCRF',
-    version='1.0.3',
+    version='1.0.4',
     description='An Implementation of Conditional Random Fields in pytorch',
     long_description=readme,
     long_description_content_type='text/markdown',

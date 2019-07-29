@@ -25,19 +25,17 @@ class CRF(nn.Module):
         # 遷移行列のフォーマット (遷移元, 遷移先)
         # transition matrix setting
         # transition matrix format (source, destination)
-        self.trans_matrix = nn.Parameter(self.myTensor(num_labels, num_labels))
+        self.trans_matrix = self.myTensor(num_labels, num_labels)
         # 先頭と末尾への遷移行列の設定
         # transition matrix of start and end settings
-        self.start_trans = nn.Parameter(self.myTensor(num_labels))
-        self.end_trans = nn.Parameter(self.myTensor(num_labels))
+        self.start_trans = self.myTensor(num_labels)
+        self.end_trans = self.myTensor(num_labels)
 
-        self._initialize_parameters()
+        self._initialize_parameters(pad_idx)
 
-        if pad_idx is not None:
-            self.start_trans[pad_idx] = -10000.
-            self.trans_matrix[pad_idx, :] = -10000.
-            self.trans_matrix[:, pad_idx] = -10000.
-            self.trans_matrix[pad_idx, pad_idx] = 0.
+        self.trans_matrix = nn.Parameter(self.trans_matrix)
+        self.start_matrix = nn.Parameter(self.start_trans)
+        self.end_matrix = nn.Parameter(self.end_trans)
 
     def forward(self, h: torch.FloatTensor,
                 labels: torch.LongTensor,
@@ -247,15 +245,21 @@ class CRF(nn.Module):
 
         return score
 
-    def _initialize_parameters(self) -> None:
+    def _initialize_parameters(self, pad_idx: int) -> None:
         """
         initialize transition parameters
+        :param: pad_idx: if not None, additional initialize
         :return: None
         """
 
         nn.init.uniform_(self.trans_matrix, -0.1, 0.1)
         nn.init.uniform_(self.start_trans, -0.1, 0.1)
         nn.init.uniform_(self.end_trans, -0.1, 0.1)
+        if pad_idx is not None:
+            self.start_trans[pad_idx] = -10000.
+            self.trans_matrix[pad_idx, :] = -10000.
+            self.trans_matrix[:, pad_idx] = -10000.
+            self.trans_matrix[pad_idx, pad_idx] = 0.
 
     @staticmethod
     def logsumexp(x: torch.FloatTensor, dim: int) -> torch.FloatTensor:
