@@ -180,7 +180,7 @@ class CRF(nn.Module):
             # スコアの更新
             # update scores
             # (batch_size, num_labels)
-            score = score_t * mask_t + score * (1 - mask_t)
+            score = score_t * mask_t + score * (~ mask_t)
 
         # 末尾のスコアを足し合わせる
         # add the end score of each label
