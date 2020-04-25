@@ -20,7 +20,7 @@ Implementation of CRF (Conditional Random Fields) in PyTorch 1.0
 >>> batch_size = 2
 >>> sequence_size = 3
 >>> num_labels = 5
->>> mask = torch.FloatTensor([[1, 1, 1], [1, 1, 0]]) # (batch_size. sequence_size)
+>>> mask = torch.ByteTensor([[1, 1, 1], [1, 1, 0]]) # (batch_size. sequence_size)
 >>> labels = torch.LongTensor([[0, 2, 3], [1, 4, 1]])  # (batch_size, sequence_size)
 >>> hidden = torch.randn((batch_size, sequence_size, num_labels), requires_grad=True)
 >>> crf = CRF(num_labels)
