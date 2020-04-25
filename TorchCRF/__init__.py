@@ -37,7 +37,7 @@ class CRF(nn.Module):
         self.end_matrix = nn.Parameter(self.end_trans)
 
     def forward(
-        self, h: torch.FloatTensor, labels: torch.LongTensor, mask: torch.ByteTensor
+        self, h: torch.FloatTensor, labels: torch.LongTensor, mask: torch.BoolTensor
     ) -> torch.FloatTensor:
         """
 
@@ -55,7 +55,7 @@ class CRF(nn.Module):
         return log_numerator - log_denominator
 
     def viterbi_decode(
-        self, h: torch.FloatTensor, mask: torch.ByteTensor
+        self, h: torch.FloatTensor, mask: torch.BoolTensor
     ) -> List[List[int]]:
         """
         decode labels using viterbi algorithm
@@ -145,7 +145,7 @@ class CRF(nn.Module):
         return best_labels
 
     def _compute_denominator_log_likelihood(
-        self, h: torch.FloatTensor, mask: torch.ByteTensor
+        self, h: torch.FloatTensor, mask: torch.BoolTensor
     ):
         """
 
@@ -172,7 +172,7 @@ class CRF(nn.Module):
             # 各系列の系列のt番目のマスクを用意
             # prepare t-th mask of sequences in each sequence
             # (batch_size, 1)
-            mask_t = mask[:, t].view(batch_size, 1).type(torch.ByteTensor)
+            mask_t = mask[:, t].view(batch_size, 1).type(torch.BoolTensor)
             mask_t = mask_t.cuda() if CRF.CUDA else mask_t
 
             # 各系列におけるt番目の系列ラベルの遷移確率
@@ -197,7 +197,7 @@ class CRF(nn.Module):
         return self.logsumexp(score, 1)
 
     def _compute_numerator_log_likelihood(
-        self, h: torch.FloatTensor, y: torch.LongTensor, mask: torch.ByteTensor
+        self, h: torch.FloatTensor, y: torch.LongTensor, mask: torch.BoolTensor
     ) -> torch.FloatTensor:
         """
         compute the numerator term for the log-likelihood
@@ -218,8 +218,8 @@ class CRF(nn.Module):
         trans = self.trans_matrix.unsqueeze(-1)
 
         for t in range(seq_len - 1):
-            mask_t = mask[:, t]
-            mask_t1 = mask[:, t + 1]
+            mask_t = mask[:, t].cuda() if CRF.CUDA else mask[:, t]
+            mask_t1 = mask[:, t + 1] if CRF.CUDA else mask[:, t + 1]
             # t+1番目のラベルのスコアを抽出
             # extract the score of t+1 label
             # (batch_size)
