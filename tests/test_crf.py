@@ -1,5 +1,7 @@
 import unittest
+
 import torch
+
 from TorchCRF import CRF
 
 

@@ -8,7 +8,9 @@ from torch import BoolTensor, FloatTensor, LongTensor
 class CRF(nn.Module):
     CUDA = torch.cuda.is_available()
 
-    def __init__(self, num_labels: int, pad_idx: Optional[int] = None, use_gpu: bool = True) -> None:
+    def __init__(
+        self, num_labels: int, pad_idx: Optional[int] = None, use_gpu: bool = True
+    ) -> None:
         """
 
         :param num_labels: number of labels
@@ -40,7 +42,9 @@ class CRF(nn.Module):
         self.start_matrix = nn.Parameter(self.start_trans)
         self.end_matrix = nn.Parameter(self.end_trans)
 
-    def forward(self, h: FloatTensor, labels: LongTensor, mask: BoolTensor) -> FloatTensor:
+    def forward(
+        self, h: FloatTensor, labels: LongTensor, mask: BoolTensor
+    ) -> FloatTensor:
         """
 
         :param h: hidden matrix (seq_len, batch_size, num_labels)
@@ -144,9 +148,7 @@ class CRF(nn.Module):
 
         return best_labels
 
-    def _compute_denominator_log_likelihood(
-        self, h: FloatTensor, mask: BoolTensor
-    ):
+    def _compute_denominator_log_likelihood(self, h: FloatTensor, mask: BoolTensor):
         """
 
         compute the denominator term for the log-likelihood
