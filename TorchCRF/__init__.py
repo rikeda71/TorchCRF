@@ -15,8 +15,7 @@ class CRF(nn.Module):
         """
 
         if num_labels < 1:
-            raise ValueError(
-                'invalid number of labels: {0}'.format(num_labels))
+            raise ValueError("invalid number of labels: {0}".format(num_labels))
 
         super().__init__()
         self.num_labels = num_labels
@@ -37,9 +36,9 @@ class CRF(nn.Module):
         self.start_matrix = nn.Parameter(self.start_trans)
         self.end_matrix = nn.Parameter(self.end_trans)
 
-    def forward(self, h: torch.FloatTensor,
-                labels: torch.LongTensor,
-                mask: torch.FloatTensor) -> torch.FloatTensor:
+    def forward(
+        self, h: torch.FloatTensor, labels: torch.LongTensor, mask: torch.BoolTensor
+    ) -> torch.FloatTensor:
         """
 
         :param h: hidden matrix (seq_len, batch_size, num_labels)
@@ -55,8 +54,9 @@ class CRF(nn.Module):
 
         return log_numerator - log_denominator
 
-    def viterbi_decode(self, h: torch.FloatTensor,
-                       mask: torch.FloatTensor) -> List[List[int]]:
+    def viterbi_decode(
+        self, h: torch.FloatTensor, mask: torch.BoolTensor
+    ) -> List[List[int]]:
         """
         decode labels using viterbi algorithm
         :param h: hidden matrix (batch_size, seq_len, num_labels)
@@ -105,15 +105,20 @@ class CRF(nn.Module):
 
         # バッチ内のラベルを推定
         # predict labels of mini batch
-        best_paths = [self._viterbi_compute_best_path(i, seq_lens, score, path)
-                      for i in range(batch_size)]
+        best_paths = [
+            self._viterbi_compute_best_path(i, seq_lens, score, path)
+            for i in range(batch_size)
+        ]
 
         return best_paths
 
-    def _viterbi_compute_best_path(self, batch_idx: int,
-                                   seq_lens: torch.LongTensor,
-                                   score: List[torch.FloatTensor],
-                                   path: List[torch.LongTensor]) -> List[int]:
+    def _viterbi_compute_best_path(
+        self,
+        batch_idx: int,
+        seq_lens: torch.LongTensor,
+        score: List[torch.FloatTensor],
+        path: List[torch.LongTensor],
+    ) -> List[int]:
         """
         return labels using viterbi algorithm
         :param batch_idx: index of batch
@@ -128,20 +133,20 @@ class CRF(nn.Module):
         seq_end_idx = seq_lens[batch_idx] - 1
         # 系列の一番後ろのラベルを抽出
         # extract label of end sequence
-        _, best_last_label = \
-            (score[seq_end_idx][batch_idx] + self.end_trans).max(0)
+        _, best_last_label = (score[seq_end_idx][batch_idx] + self.end_trans).max(0)
         best_labels = [int(best_last_label)]
 
         # viterbiアルゴリズムにより，ラベルを後ろから推定
         # predict labels from back using viterbi algorithm
-        for p in reversed(path[: seq_end_idx]):
+        for p in reversed(path[:seq_end_idx]):
             best_last_label = p[batch_idx][best_labels[0]]
             best_labels.insert(0, int(best_last_label))
 
         return best_labels
 
-    def _compute_denominator_log_likelihood(self, h: torch.FloatTensor,
-                                            mask: torch.FloatTensor):
+    def _compute_denominator_log_likelihood(
+        self, h: torch.FloatTensor, mask: torch.BoolTensor
+    ):
         """
 
         compute the denominator term for the log-likelihood
@@ -167,7 +172,9 @@ class CRF(nn.Module):
             # 各系列の系列のt番目のマスクを用意
             # prepare t-th mask of sequences in each sequence
             # (batch_size, 1)
-            mask_t = mask[:, t].view(batch_size, 1)
+            mask_t = mask[:, t].view(batch_size, 1).type(torch.BoolTensor)
+            mask_t = mask_t.cuda() if CRF.CUDA else mask_t
+
             # 各系列におけるt番目の系列ラベルの遷移確率
             # prepare the transition probability of the t-th sequence label
             # in each sequence
@@ -180,7 +187,7 @@ class CRF(nn.Module):
             # スコアの更新
             # update scores
             # (batch_size, num_labels)
-            score = score_t * mask_t + score * (1 - mask_t)
+            score = score_t * mask_t + score * (~mask_t)
 
         # 末尾のスコアを足し合わせる
         # add the end score of each label
@@ -190,9 +197,8 @@ class CRF(nn.Module):
         return self.logsumexp(score, 1)
 
     def _compute_numerator_log_likelihood(
-            self, h: torch.FloatTensor,
-            y: torch.LongTensor,
-            mask: torch.FloatTensor) -> torch.FloatTensor:
+        self, h: torch.FloatTensor, y: torch.LongTensor, mask: torch.BoolTensor
+    ) -> torch.FloatTensor:
         """
         compute the numerator term for the log-likelihood
         :param h: hidden matrix (batch_size, seq_len, num_labels)
@@ -212,8 +218,8 @@ class CRF(nn.Module):
         trans = self.trans_matrix.unsqueeze(-1)
 
         for t in range(seq_len - 1):
-            mask_t = mask[:, t]
-            mask_t1 = mask[:, t + 1]
+            mask_t = mask[:, t].cuda() if CRF.CUDA else mask[:, t]
+            mask_t1 = mask[:, t + 1] if CRF.CUDA else mask[:, t + 1]
             # t+1番目のラベルのスコアを抽出
             # extract the score of t+1 label
             # (batch_size)
@@ -256,10 +262,10 @@ class CRF(nn.Module):
         nn.init.uniform_(self.start_trans, -0.1, 0.1)
         nn.init.uniform_(self.end_trans, -0.1, 0.1)
         if pad_idx is not None:
-            self.start_trans[pad_idx] = -10000.
-            self.trans_matrix[pad_idx, :] = -10000.
-            self.trans_matrix[:, pad_idx] = -10000.
-            self.trans_matrix[pad_idx, pad_idx] = 0.
+            self.start_trans[pad_idx] = -10000.0
+            self.trans_matrix[pad_idx, :] = -10000.0
+            self.trans_matrix[:, pad_idx] = -10000.0
+            self.trans_matrix[pad_idx, pad_idx] = 0.0
 
     @staticmethod
     def logsumexp(x: torch.FloatTensor, dim: int) -> torch.FloatTensor:
@@ -272,8 +278,7 @@ class CRF(nn.Module):
         """
 
         vmax, _ = x.max(dim)
-        return vmax + \
-            torch.log(torch.sum(torch.exp(x - vmax.unsqueeze(dim)), dim))
+        return vmax + torch.log(torch.sum(torch.exp(x - vmax.unsqueeze(dim)), dim))
 
     @staticmethod
     def myTensor(*args) -> torch.Tensor:
