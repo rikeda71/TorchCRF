@@ -6,7 +6,8 @@ import torch.nn as nn
 class CRF(nn.Module):
     CUDA = torch.cuda.is_available()
 
-    def __init__(self, num_labels: int, pad_idx: int = None) -> None:
+    def __init__(self, num_labels: int, pad_idx: int = None, use_gpu: bool = True) -> None:
+        CUDA = CUDA and use_gpu
         """
 
         :param num_labels: number of labels
