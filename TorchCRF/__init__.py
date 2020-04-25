@@ -173,6 +173,8 @@ class CRF(nn.Module):
             # prepare t-th mask of sequences in each sequence
             # (batch_size, 1)
             mask_t = mask[:, t].view(batch_size, 1).type(torch.ByteTensor)
+            mask_t = mask_t.cuda() if CRF.CUDA else mask_t
+
             # 各系列におけるt番目の系列ラベルの遷移確率
             # prepare the transition probability of the t-th sequence label
             # in each sequence
