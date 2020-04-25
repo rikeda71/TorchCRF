@@ -1,5 +1,7 @@
 import unittest
+
 import torch
+
 from TorchCRF import CRF
 
 
@@ -33,7 +35,7 @@ class TestCRF(unittest.TestCase):
         exception = er.exception
         self.assertEqual(exception.args[0], "invalid number of labels: -1")
 
-    def test_initialize_score(self):
+    def test_initialize_score_when_padidx_None(self):
 
         self.assertTrue(0.1 > torch.max(self.crf.trans_matrix))
         self.assertTrue(-0.1 < torch.min(self.crf.trans_matrix))
@@ -41,6 +43,15 @@ class TestCRF(unittest.TestCase):
         self.assertTrue(-0.1 < torch.min(self.crf.start_trans))
         self.assertTrue(0.1 > torch.max(self.crf.end_trans))
         self.assertTrue(-0.1 < torch.min(self.crf.end_trans))
+
+    def test_initialize_score_when_set_padidx(self):
+        crf = CRF(self.num_labels, 1)
+        self.assertTrue(0.1 > torch.max(crf.trans_matrix))
+        self.assertTrue(-10000.0 == torch.min(crf.trans_matrix))
+        self.assertTrue(0.1 > torch.max(crf.start_trans))
+        self.assertTrue(-10000.0 == torch.min(crf.start_trans))
+        self.assertTrue(0.1 > torch.max(crf.end_trans))
+        self.assertTrue(-0.1 < torch.min(crf.end_trans))
 
     def test_forward(self):
         fvalue = self.crf.forward(self.hidden, self.labels, self.mask)

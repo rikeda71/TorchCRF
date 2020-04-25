@@ -1,13 +1,16 @@
-from typing import List
+from typing import List, Optional
+
 import torch
 import torch.nn as nn
+from torch import BoolTensor, FloatTensor, LongTensor
 
 
 class CRF(nn.Module):
     CUDA = torch.cuda.is_available()
 
-    def __init__(self, num_labels: int, pad_idx: int = None, use_gpu: bool = True) -> None:
-        CUDA = CUDA and use_gpu
+    def __init__(
+        self, num_labels: int, pad_idx: Optional[int] = None, use_gpu: bool = True
+    ) -> None:
         """
 
         :param num_labels: number of labels
@@ -15,21 +18,23 @@ class CRF(nn.Module):
         :return None
         """
 
+        CRF.CUDA = CRF.CUDA and use_gpu
         if num_labels < 1:
             raise ValueError("invalid number of labels: {0}".format(num_labels))
 
         super().__init__()
         self.num_labels = num_labels
+        device = "cuda" if CRF.CUDA else "cpu"
 
         # 遷移行列の設定
         # 遷移行列のフォーマット (遷移元, 遷移先)
         # transition matrix setting
         # transition matrix format (source, destination)
-        self.trans_matrix = self.myTensor(num_labels, num_labels)
+        self.trans_matrix = FloatTensor(num_labels, num_labels).to(device)
         # 先頭と末尾への遷移行列の設定
         # transition matrix of start and end settings
-        self.start_trans = self.myTensor(num_labels)
-        self.end_trans = self.myTensor(num_labels)
+        self.start_trans = FloatTensor(num_labels).to(device)
+        self.end_trans = FloatTensor(num_labels).to(device)
 
         self._initialize_parameters(pad_idx)
 
@@ -38,8 +43,8 @@ class CRF(nn.Module):
         self.end_matrix = nn.Parameter(self.end_trans)
 
     def forward(
-        self, h: torch.FloatTensor, labels: torch.LongTensor, mask: torch.BoolTensor
-    ) -> torch.FloatTensor:
+        self, h: FloatTensor, labels: LongTensor, mask: BoolTensor
+    ) -> FloatTensor:
         """
 
         :param h: hidden matrix (seq_len, batch_size, num_labels)
@@ -55,9 +60,7 @@ class CRF(nn.Module):
 
         return log_numerator - log_denominator
 
-    def viterbi_decode(
-        self, h: torch.FloatTensor, mask: torch.BoolTensor
-    ) -> List[List[int]]:
+    def viterbi_decode(self, h: FloatTensor, mask: BoolTensor) -> List[List[int]]:
         """
         decode labels using viterbi algorithm
         :param h: hidden matrix (batch_size, seq_len, num_labels)
@@ -117,7 +120,7 @@ class CRF(nn.Module):
         self,
         batch_idx: int,
         seq_lens: torch.LongTensor,
-        score: List[torch.FloatTensor],
+        score: List[FloatTensor],
         path: List[torch.LongTensor],
     ) -> List[int]:
         """
@@ -145,9 +148,7 @@ class CRF(nn.Module):
 
         return best_labels
 
-    def _compute_denominator_log_likelihood(
-        self, h: torch.FloatTensor, mask: torch.BoolTensor
-    ):
+    def _compute_denominator_log_likelihood(self, h: FloatTensor, mask: BoolTensor):
         """
 
         compute the denominator term for the log-likelihood
@@ -198,8 +199,8 @@ class CRF(nn.Module):
         return self.logsumexp(score, 1)
 
     def _compute_numerator_log_likelihood(
-        self, h: torch.FloatTensor, y: torch.LongTensor, mask: torch.BoolTensor
-    ) -> torch.FloatTensor:
+        self, h: FloatTensor, y: LongTensor, mask: BoolTensor
+    ) -> FloatTensor:
         """
         compute the numerator term for the log-likelihood
         :param h: hidden matrix (batch_size, seq_len, num_labels)
@@ -252,7 +253,7 @@ class CRF(nn.Module):
 
         return score
 
-    def _initialize_parameters(self, pad_idx: int) -> None:
+    def _initialize_parameters(self, pad_idx: Optional[int]) -> None:
         """
         initialize transition parameters
         :param: pad_idx: if not None, additional initialize
@@ -269,29 +270,14 @@ class CRF(nn.Module):
             self.trans_matrix[pad_idx, pad_idx] = 0.0
 
     @staticmethod
-    def logsumexp(x: torch.FloatTensor, dim: int) -> torch.FloatTensor:
+    def logsumexp(x: FloatTensor, dim: int) -> FloatTensor:
         """
         return log(sum(exp(x))) while minimizing
                                 the possibility of overflow/underflow.
-        :param x: the matrix format torch.FloatTensor
+        :param x: the matrix format FloatTensor
         :param dim: dimensiton
         :return: log(sum(exp(x)))
         """
 
         vmax, _ = x.max(dim)
         return vmax + torch.log(torch.sum(torch.exp(x - vmax.unsqueeze(dim)), dim))
-
-    @staticmethod
-    def myTensor(*args) -> torch.Tensor:
-        x = torch.Tensor(*args)
-        return x.cuda() if CRF.CUDA else x
-
-    @staticmethod
-    def myLongTensor(*args) -> torch.LongTensor:
-        x = torch.LongTensor(*args)
-        return x.cuda() if CRF.CUDA else x
-
-    @staticmethod
-    def myrandn(*args) -> torch.Tensor:
-        x = torch.randn(*args)
-        return x.cuda() if CRF.CUDA else x
