@@ -80,3 +80,7 @@ class TestCRF(unittest.TestCase):
     def test_logsumexp(self):
         lse = self.crf.logsumexp(self.hidden, -1)
         self.assertEqual(lse.size(), (self.batch_size, self.sequence_size))
+
+
+if __name__ == '__main__':
+    unittest.main()
