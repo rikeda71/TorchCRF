@@ -11,36 +11,36 @@ Implementation of CRF (Conditional Random Fields) in PyTorch
 
 ## Installation
 
-    `$ pip install TorchCRF`
+    $ pip install TorchCRF
 
 ## Usage
 
-    ```python
-    >>> import torch
-    >>> from TorchCRF import CRF
-    >>> device = "cuda" if torch.cuda.is_available() else "cpu"
-    >>> batch_size = 2
-    >>> sequence_size = 3
-    >>> num_labels = 5
-    >>> mask = torch.ByteTensor([[1, 1, 1], [1, 1, 0]]).to(device) # (batch_size. sequence_size)
-    >>> labels = torch.LongTensor([[0, 2, 3], [1, 4, 1]]).to(device)  # (batch_size, sequence_size)
-    >>> hidden = torch.randn((batch_size, sequence_size, num_labels), requires_grad=True).to(device)
-    >>> crf = CRF(num_labels)
-    ```
+```python
+>>> import torch
+>>> from TorchCRF import CRF
+>>> device = "cuda" if torch.cuda.is_available() else "cpu"
+>>> batch_size = 2
+>>> sequence_size = 3
+>>> num_labels = 5
+>>> mask = torch.ByteTensor([[1, 1, 1], [1, 1, 0]]).to(device) # (batch_size. sequence_size)
+>>> labels = torch.LongTensor([[0, 2, 3], [1, 4, 1]]).to(device)  # (batch_size, sequence_size)
+>>> hidden = torch.randn((batch_size, sequence_size, num_labels), requires_grad=True).to(device)
+>>> crf = CRF(num_labels)
+```
 
 ### Computing log-likelihood (used where forward)
 
-    ```python
-    >>> crf.forward(hidden, labels, mask)
-    tensor([-7.6204, -3.6124], device='cuda:0', grad_fn=<ThSubBackward>)
-    ```
+```python
+>>> crf.forward(hidden, labels, mask)
+tensor([-7.6204, -3.6124], device='cuda:0', grad_fn=<ThSubBackward>)
+```
 
 ### Decoding (predict labels of sequences)
 
-    ```python
-    >>> crf.viterbi_decode(hidden, mask)
-    [[0, 2, 2], [4, 0]]
-    ```
+```python
+>>> crf.viterbi_decode(hidden, mask)
+[[0, 2, 2], [4, 0]]
+```
 
 ## License
 
