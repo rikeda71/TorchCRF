@@ -47,11 +47,11 @@ class CRF(nn.Module):
     ) -> FloatTensor:
         """
 
-        :param h: hidden matrix (seq_len, batch_size, num_labels)
+        :param h: hidden matrix (batch_size, seq_len, num_labels)
         :param labels: answer labels of each sequence
-                       in mini batch (seq_len, batch_size)
+                       in mini batch (batch_size, seq_len)
         :param mask: mask tensor of each sequence
-                     in mini batch (seq_len, batch_size)
+                     in mini batch (batch_size, seq_len)
         :return: The log-likelihood (batch_size)
         """
 
