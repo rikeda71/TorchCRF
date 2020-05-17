@@ -65,7 +65,7 @@ class CRF(nn.Module):
         decode labels using viterbi algorithm
         :param h: hidden matrix (batch_size, seq_len, num_labels)
         :param mask: mask tensor of each sequence
-                     in mini batch (seq_len, batch_size)
+                     in mini batch (batch_size, batch_size)
         :return: labels of each sequence in mini batch
         """
 
