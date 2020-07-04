@@ -165,7 +165,7 @@ class CRF(nn.Module):
         # 先頭から各ラベルへのスコアと各ラベルの1番目のスコアを足し合わせる
         # add the score from beginning to each label
         # and the first score of each label
-        score = self.start_trans.view(1, -1) + h[:, 0]
+        score = self.start_trans + h[:, 0]
         # ミニバッチ中の単語数だけ処理を行う
         # iterate through processing for the number of words in the mini batch
         for t in range(1, seq_len):
@@ -185,7 +185,7 @@ class CRF(nn.Module):
             # 各系列でのt番目のスコアを導出
             # calculate t-th scores in each sequence
             # (batch_size, num_labels)
-            score_t = self.logsumexp(before_score + h_t + trans, 1)
+            score_t = torch.logsumexp(before_score + h_t + trans, 1)
             # スコアの更新
             # update scores
             # (batch_size, num_labels)
@@ -193,10 +193,10 @@ class CRF(nn.Module):
 
         # 末尾のスコアを足し合わせる
         # add the end score of each label
-        score += self.end_trans.view(1, -1)
+        score += self.end_trans
         # ミニバッチ中のデータ全体の対数尤度を返す
         # return the log likely food of all data in mini batch
-        return self.logsumexp(score, 1)
+        return torch.logsumexp(score, 1)
 
     def _compute_numerator_log_likelihood(
         self, h: FloatTensor, y: LongTensor, mask: BoolTensor
@@ -268,16 +268,3 @@ class CRF(nn.Module):
             self.trans_matrix[pad_idx, :] = -10000.0
             self.trans_matrix[:, pad_idx] = -10000.0
             self.trans_matrix[pad_idx, pad_idx] = 0.0
-
-    @staticmethod
-    def logsumexp(x: FloatTensor, dim: int) -> FloatTensor:
-        """
-        return log(sum(exp(x))) while minimizing
-                                the possibility of overflow/underflow.
-        :param x: the matrix format FloatTensor
-        :param dim: dimensiton
-        :return: log(sum(exp(x)))
-        """
-
-        vmax, _ = x.max(dim)
-        return vmax + torch.log(torch.sum(torch.exp(x - vmax.unsqueeze(dim)), dim))
