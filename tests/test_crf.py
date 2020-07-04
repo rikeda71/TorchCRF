@@ -87,7 +87,3 @@ class TestCRF(unittest.TestCase):
         self.assertEqual(len(labels[1]), seq_lens[1])
         label_types = list(set([int(label) for seq in self.labels for label in seq]))
         self.assertTrue([label in label_types for seq in labels for label in seq])
-
-    def test_logsumexp(self):
-        lse = self.crf.logsumexp(self.hidden, -1)
-        self.assertEqual(lse.size(), (self.batch_size, self.sequence_size))
