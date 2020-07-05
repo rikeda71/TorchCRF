@@ -22,7 +22,7 @@ class CRF(nn.Module):
 
         super().__init__()
         self.num_labels = num_labels
-        device = "cuda" if torch.cuda.is_available() and use_gpu else "cpu"
+        self._use_gpu = torch.cuda.is_available() and use_gpu
 
         # 遷移行列の設定
         # 遷移行列のフォーマット (遷移元, 遷移先)
@@ -169,6 +169,7 @@ class CRF(nn.Module):
             # prepare t-th mask of sequences in each sequence
             # (batch_size, 1)
             mask_t = mask[:, t].unsqueeze(1)
+            mask_t = mask_t.cuda() if self._use_gpu else mask_t
 
             # 各系列におけるt番目の系列ラベルの遷移確率
             # prepare the transition probability of the t-th sequence label
@@ -258,7 +259,9 @@ class CRF(nn.Module):
         """
 
         mask_t = mask[:, t]
+        mask_t = mask_t.cuda() if self._use_gpu else mask_t
         mask_t1 = mask[:, t + 1]
+        mask_t1 = mask_t1.cuda() if self._use_gpu else mask_t1
         # t+1番目のラベルのスコアを抽出
         # extract the score of t+1 label
         # (batch_size)
