@@ -3,8 +3,8 @@
 [![CircleCI](https://circleci.com/gh/s14t284/TorchCRF.svg?style=svg)](https://circleci.com/gh/s14t284/TorchCRF)
 [![Coverage Status](https://coveralls.io/repos/github/s14t284/TorchCRF/badge.svg)](https://coveralls.io/github/s14t284/TorchCRF)
 [![Github Star](https://img.shields.io/github/stars/s14t284/TorchCRF)](GithubStar)
-[![PyPI version](https://badge.fury.io/py/polar-bear.svg)](https://badge.fury.io/py/polar-bear)
-[![Python Versions](https://img.shields.io/pypi/pyversions/polar_bear.svg)](https://pypi.org/project/polar-bear/)
+[![PyPI version](https://badge.fury.io/py/TorchCRF.svg)](https://badge.fury.io/py/TorchCRF)
+[![Python Versions](https://img.shields.io/pypi/pyversions/TorchCRF.svg)](https://pypi.org/project/TorchCRF/)
 [![MIT License](https://img.shields.io/github/license/s14t284/TorchCRF)](LICENSE)
 
 Implementation of CRF (Conditional Random Fields) in PyTorch
