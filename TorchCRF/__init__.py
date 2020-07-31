@@ -138,7 +138,7 @@ class CRF(nn.Module):
                      in mini batch (batch_size, seq_len)
         :return: The score of denominator term for the log-likelihood
         """
-
+        device = h.device
         batch_size, seq_len, _ = h.size()
 
         # (num_labels, num_labels) -> (1, num_labels, num_labels)
@@ -156,7 +156,7 @@ class CRF(nn.Module):
             # prepare t-th mask of sequences in each sequence
             # (batch_size, 1)
             mask_t = mask[:, t].unsqueeze(1)
-            mask_t = mask_t.cuda() if self._use_gpu else mask_t
+            mask_t = mask_t.to(device)
 
             # prepare the transition probability of the t-th sequence label
             # in each sequence
@@ -238,11 +238,11 @@ class CRF(nn.Module):
         :param arange_b: this param is seted torch.arange(batch_size)
         :param batch_size: batch size of this calculation
         """
-
+        device = h.device
         mask_t = mask[:, t]
-        mask_t = mask_t.cuda() if self._use_gpu else mask_t
+        mask_t = mask_t.to(device)
         mask_t1 = mask[:, t + 1]
-        mask_t1 = mask_t1.cuda() if self._use_gpu else mask_t1
+        mask_t1 = mask_t1.to(device)
 
         # extract the score of t+1 label
         # (batch_size)
