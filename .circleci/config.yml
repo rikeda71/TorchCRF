@@ -108,5 +108,5 @@ jobs:
       - run:
           name: upload to pypi
           command: |
-            . venv/bin/activate
+            . env/bin/activate
             twine upload --repository pypi dist/*
