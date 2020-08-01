@@ -4,7 +4,7 @@ import sys
 from setuptools import setup
 from setuptools.command.install import install
 
-VERSION = "1.0.9"
+VERSION = "1.1.0"
 
 
 def _requires_from_file(filename):
