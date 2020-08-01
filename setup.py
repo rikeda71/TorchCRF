@@ -26,6 +26,7 @@ class VerifyReleaseVersion(install):
 with open("README.md", "r", encoding="utf-8") as f:
     readme = f.read()
 
+
 setup(
     name="TorchCRF",
     version=VERSION,
