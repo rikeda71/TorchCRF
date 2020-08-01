@@ -15,12 +15,15 @@ class VerifyReleaseVersion(install):
     def run(self):
         tag = os.getenv("CIRCLE_TAG")
 
+        # TODO: git tag を使ったバージョン管理
+        '''
         if tag != VERSION:
             sys.exit(
                 "Git tag: {} does not match the version this library: {}".format(
                     tag, VERSION
                 )
             )
+        '''
 
 
 with open("README.md", "r", encoding="utf-8") as f:
