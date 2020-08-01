@@ -8,7 +8,6 @@ workflows:
               only:
                 - /.*/
       - deploy:
-          tag: ${CIRCLE_TAG}
           filters:
             branches:
               only:
