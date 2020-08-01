@@ -12,8 +12,9 @@ workflows:
             branches:
               only:
                 - master
-              tags:
-                only: /.*/
+            tags:
+              only:
+                - /.*/
           requires:
             - build
 
